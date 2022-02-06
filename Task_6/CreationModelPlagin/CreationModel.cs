@@ -1,4 +1,5 @@
-﻿using Autodesk.Revit.Attributes;
+﻿using Autodesk.Revit.ApplicationServices;
+using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Structure;
 using Autodesk.Revit.UI;
@@ -41,13 +42,14 @@ namespace CreationModelPlagin
             AddWindow(doc, level1, walls[1]);
             AddWindow(doc, level1, walls[2]);
             AddWindow(doc, level1, walls[3]);
+            AddRoоf(doc, level2, walls, width, depth);
 
             tr.Commit();
 
             return Result.Succeeded;
         }
 
-        public List<Wall> CreateFourWalls (Document doc,double width, double depth, Level botton, Level top)
+        public List<Wall> CreateFourWalls(Document doc, double width, double depth, Level botton, Level top)
         {
             double dx = width / 2;
             double dy = depth / 2;
@@ -118,12 +120,45 @@ namespace CreationModelPlagin
                 windowType.Activate();
             }
 
-            FamilyInstance window =  doc.Create.NewFamilyInstance(point, windowType, wall, level1, StructuralType.NonStructural);
+            FamilyInstance window = doc.Create.NewFamilyInstance(point, windowType, wall, level1, StructuralType.NonStructural);
 
-            double height  = UnitUtils.ConvertToInternalUnits(1000, UnitTypeId.Millimeters);
+            double height = UnitUtils.ConvertToInternalUnits(1000, UnitTypeId.Millimeters);
             window.get_Parameter(BuiltInParameter.INSTANCE_SILL_HEIGHT_PARAM).Set(height);
             window.flipFacing();
 
+        }
+
+        private void AddRoоf(Document doc, Level level2, List<Wall> walls, double width, double depth)
+        {
+            RoofType roofType = new FilteredElementCollector(doc)
+                .OfClass(typeof(RoofType))
+                .OfType<RoofType>()
+                .Where(x => x.Name.Equals("Типовой - 125мм"))
+                .Where(x => x.FamilyName.Equals("Базовая крыша"))
+                .FirstOrDefault();
+
+            View view = new FilteredElementCollector(doc)
+                .OfClass(typeof(View))
+                .OfType<View>()
+                .Where(x => x.Name.Equals("Уровень 1"))
+                .FirstOrDefault();
+
+            double wallWight = walls[0].Width;
+            double dt = wallWight / 2;
+
+            double extrusionStart = -width / 2 - dt;
+            double extrusionEnd = width / 2 + dt;
+
+            double curveStart = -depth / 2 - dt;
+            double curveEnd = +depth / 2 + dt;
+
+            CurveArray curveArray = new CurveArray();
+            curveArray.Append(Line.CreateBound(new XYZ(0, curveStart, level2.Elevation), new XYZ(0, 0, level2.Elevation + 10)));
+            curveArray.Append(Line.CreateBound(new XYZ(0, 0, level2.Elevation + 10), new XYZ(0, curveEnd, level2.Elevation)));
+
+            ReferencePlane plane = doc.Create.NewReferencePlane(new XYZ(0, 0, 0), new XYZ(0, 0, 20), new XYZ(0, 20, 0), view);
+            ExtrusionRoof extrusionRoof = doc.Create.NewExtrusionRoof(curveArray, plane, level2, roofType, extrusionStart, extrusionEnd);
+            extrusionRoof.EaveCuts = EaveCutterType.TwoCutSquare;
         }
     }
 }
