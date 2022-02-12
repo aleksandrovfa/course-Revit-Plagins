@@ -119,10 +119,11 @@ namespace CreationModelPlagin
             }
 
             FamilyInstance window =  doc.Create.NewFamilyInstance(point, windowType, wall, level1, StructuralType.NonStructural);
+            window.flipFacing();
 
             double height  = UnitUtils.ConvertToInternalUnits(1000, UnitTypeId.Millimeters);
             window.get_Parameter(BuiltInParameter.INSTANCE_SILL_HEIGHT_PARAM).Set(height);
-            window.flipFacing();
+            
 
         }
     }

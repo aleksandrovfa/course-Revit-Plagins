@@ -32,8 +32,8 @@ namespace CreationModelPlagin
                 .Where(x => x.Name.Equals("Уровень 2"))
                 .FirstOrDefault();
 
-            double width = UnitUtils.ConvertToInternalUnits(10000, UnitTypeId.Millimeters);
-            double depth = UnitUtils.ConvertToInternalUnits(5000, UnitTypeId.Millimeters);
+            double width = UnitUtils.ConvertToInternalUnits(15000, UnitTypeId.Millimeters);
+            double depth = UnitUtils.ConvertToInternalUnits(1000, UnitTypeId.Millimeters);
 
             Transaction tr = new Transaction(doc, "Построение домика");
             tr.Start();
